@@ -26,7 +26,7 @@ public class TokenLayout extends FrameLayout implements View.OnClickListener, Ru
     private PopupMenu mPopupMenu;
 
     private TokenCode mCodes;
-    private Token.TokenType mType;
+    private TokenType mType;
     private String mPlaceholder;
     private long mStartTime;
 
@@ -106,7 +106,7 @@ public class TokenLayout extends FrameLayout implements View.OnClickListener, Ru
         view.startAnimation(a);
     }
 
-    public void start(Token.TokenType type, TokenCode codes, boolean animate) {
+    public void start(TokenType type, TokenCode codes, boolean animate) {
         mCodes = codes;
         mType = type;
 
@@ -147,7 +147,7 @@ public class TokenLayout extends FrameLayout implements View.OnClickListener, Ru
             // Update the fields
             mCode.setText(code);
             mProgressInner.setProgress(mCodes.getCurrentProgress());
-            if (mType != Token.TokenType.HOTP)
+            if (mType != TokenType.HOTP)
                 mProgressOuter.setProgress(mCodes.getTotalProgress());
 
             postDelayed(this, 100);

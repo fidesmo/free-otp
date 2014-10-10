@@ -23,6 +23,7 @@ package org.fedorahosted.freeotp.edit;
 import org.fedorahosted.freeotp.R;
 import org.fedorahosted.freeotp.Token;
 import org.fedorahosted.freeotp.TokenPersistence;
+import org.fedorahosted.freeotp.TokenPersistenceFactory;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -50,6 +51,7 @@ public class EditActivity extends BaseActivity implements TextWatcher, View.OnCl
     private Uri mImageCurrent;
     private Uri mImageDefault;
     private Uri mImageDisplay;
+    private TokenPersistence mTokenPersistence;
 
     private void showImage(Uri uri) {
         mImageDisplay = uri;
@@ -73,7 +75,8 @@ public class EditActivity extends BaseActivity implements TextWatcher, View.OnCl
         setContentView(R.layout.edit);
 
         // Get token values.
-        Token token = new TokenPersistence(this).get(getPosition());
+        mTokenPersistence = TokenPersistenceFactory.createInternal(this);
+        Token token = mTokenPersistence.get(getPosition());
         mIssuerCurrent = token.getIssuer();
         mLabelCurrent = token.getLabel();
         mImageCurrent = token.getImage();
@@ -150,12 +153,11 @@ public class EditActivity extends BaseActivity implements TextWatcher, View.OnCl
                 break;
 
             case R.id.save:
-                TokenPersistence tp = new TokenPersistence(this);
-                Token token = tp.get(getPosition());
+                Token token = mTokenPersistence.get(getPosition());
                 token.setIssuer(mIssuer.getText().toString());
                 token.setLabel(mLabel.getText().toString());
                 token.setImage(mImageDisplay);
-                tp.save(token);
+                mTokenPersistence.save(token);
 
             case R.id.cancel:
                 finish();

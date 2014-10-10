@@ -25,7 +25,7 @@ import java.net.URLEncoder;
 import java.util.Locale;
 
 import org.fedorahosted.freeotp.R;
-import org.fedorahosted.freeotp.TokenPersistence;
+import org.fedorahosted.freeotp.TokenPersistenceFactory;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -130,7 +130,7 @@ public class AddActivity extends Activity implements View.OnClickListener, Compo
                 }
 
                 // Add the token
-                if (TokenPersistence.addWithToast(this, uri) != null)
+                if (TokenPersistenceFactory.createInternal(this).addWithToast(this, uri) != null)
                     finish();
 
                 break;

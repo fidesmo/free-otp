@@ -44,8 +44,8 @@ public class TokenAdapter extends BaseReorderableAdapter {
     private final ClipboardManager mClipMan;
     private final Map<String, TokenCode> mTokenCodes;
 
-    public TokenAdapter(Context ctx) {
-        mTokenPersistence = new TokenPersistence(ctx);
+    public TokenAdapter(Context ctx, TokenPersistence tokenPersistence) {
+        mTokenPersistence = tokenPersistence;
         mLayoutInflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mClipMan = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
         mTokenCodes = new HashMap<String, TokenCode>();
@@ -89,7 +89,9 @@ public class TokenAdapter extends BaseReorderableAdapter {
         TokenLayout tl = (TokenLayout) view;
         Token token = getItem(position);
 
-        tl.bind(token, R.menu.token, new PopupMenu.OnMenuItemClickListener() {
+        int menu = token.isEditable() ? R.menu.editable_token : R.menu.token;
+
+        tl.bind(token, menu, new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 Intent i;
@@ -115,7 +117,7 @@ public class TokenAdapter extends BaseReorderableAdapter {
         tl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TokenPersistence tp = new TokenPersistence(ctx);
+                TokenPersistence tp = TokenAdapter.this.mTokenPersistence;
 
                 // Increment the token.
                 Token token = tp.get(position);
@@ -141,5 +143,10 @@ public class TokenAdapter extends BaseReorderableAdapter {
     @Override
     protected View createView(ViewGroup parent, int type) {
         return mLayoutInflater.inflate(R.layout.token, parent, false);
+    }
+
+    @Override
+    protected boolean isMovable() {
+        return mTokenPersistence.isMovable();
     }
 }

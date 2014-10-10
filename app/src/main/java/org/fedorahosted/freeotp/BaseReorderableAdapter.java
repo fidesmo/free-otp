@@ -45,63 +45,66 @@ public abstract class BaseReorderableAdapter extends BaseAdapter {
         if (convertView == null) {
             int type = getItemViewType(position);
             convertView = createView(parent, type);
+            if(isMovable()) {
+                convertView.setOnDragListener(new OnDragListener() {
+                    @Override
+                    public boolean onDrag(View dstView, DragEvent event) {
+                        Reference<View> ref = (Reference<View>) event.getLocalState();
+                        final View srcView = ref.reference;
 
-            convertView.setOnDragListener(new OnDragListener() {
-                @Override
-                public boolean onDrag(View dstView, DragEvent event) {
-                    Reference<View> ref = (Reference<View>) event.getLocalState();
-                    final View srcView = ref.reference;
+                        switch (event.getAction()) {
+                        case DragEvent.ACTION_DRAG_ENTERED:
+                            srcView.setVisibility(View.VISIBLE);
+                            dstView.setVisibility(View.INVISIBLE);
 
-                    switch (event.getAction()) {
-                    case DragEvent.ACTION_DRAG_ENTERED:
-                        srcView.setVisibility(View.VISIBLE);
-                        dstView.setVisibility(View.INVISIBLE);
+                            move(((Integer) srcView.getTag(KEY)).intValue(),
+                                 ((Integer) dstView.getTag(KEY)).intValue());
+                            ref.reference = dstView;
+                            break;
 
-                        move(((Integer) srcView.getTag(KEY)).intValue(),
-                             ((Integer) dstView.getTag(KEY)).intValue());
-                        ref.reference = dstView;
-                        break;
-
-                    case DragEvent.ACTION_DRAG_ENDED:
-                        srcView.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                srcView.setVisibility(View.VISIBLE);
-                            }
-                        });
-                        break;
-                    }
-
-                    return true;
-                }
-            });
-
-            convertView.setOnLongClickListener(new OnLongClickListener() {
-                @Override
-                public boolean onLongClick(final View view) {
-                    // Force a reset of any states
-                    notifyDataSetChanged();
-
-                    // Start the drag on the main loop to allow
-                    // the above state reset to settle.
-                    view.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            ClipData data = ClipData.newPlainText("", "");
-                            DragShadowBuilder sb = new View.DragShadowBuilder(view);
-                            view.startDrag(data, sb, new Reference<View>(view), 0);
+                        case DragEvent.ACTION_DRAG_ENDED:
+                            srcView.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        srcView.setVisibility(View.VISIBLE);
+                                    }
+                                });
+                            break;
                         }
+
+                        return true;
+                    }
                     });
 
-                    return true;
-                }
-            });
+                convertView.setOnLongClickListener(new OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(final View view) {
+                        // Force a reset of any states
+                        notifyDataSetChanged();
+
+                        // Start the drag on the main loop to allow
+                        // the above state reset to settle.
+                        view.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ClipData data = ClipData.newPlainText("", "");
+                                    DragShadowBuilder sb = new View.DragShadowBuilder(view);
+                                    view.startDrag(data, sb, new Reference<View>(view), 0);
+                                }
+                            });
+
+                        return true;
+                    }
+                    });
+            }
         }
 
         convertView.setTag(KEY, Integer.valueOf(position));
         bindView(convertView, position);
         return convertView;
     }
+
+    protected abstract boolean isMovable();
 
     protected abstract void move(int fromPosition, int toPosition);
 
