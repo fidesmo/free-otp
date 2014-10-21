@@ -6,8 +6,11 @@
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
     <string name="restore_defaults">Restore Defaults</string>
-    <string name="no_keys">No OTP keys installed.</string>
-    <string name="add_token">Add Token</string>
+    <string name="no_keys_or_tap">No OTP tokens on this device. To list the tokens on an NFC device, tap it!</string>
+    <string name="no_keys">No OTP tokens on this device.</string>
+    <string name="add_token">Add token</string>
+    <string name="external_add_token">Tap NFC device to add token</string>
+    <string name="external_add_token_validation_wrong">Fields are not entered correctly</string>
     <string name="scan_qr_code">Scan QR Code</string>
     <string name="interval">Interval</string>
     <string name="counter">Counter</string>
@@ -36,8 +39,11 @@
     <string name="error_camera_open">Error while opening camera!</string>
 
     <string name="delete_summary">This is your last chance: if you delete this token, it will be gone forever. It will not be disabled on the server.</string>
-    <string name="delete_question">Delete this token?</string>
-
+    <string name="internal_delete_question">Delete this token?</string>
+    <string name="external_delete_question">Tap NFC device to delete token</string>
+    <string name="failed_to_read_external_token">Failed to read the NFC device</string>
+    <string name="tap_external_token">Tap the NFC device to refresh the list of tokens</string>
+    <string name="external_token_needed">You need the NFC device to generate a code</string>
     <string-array name="algorithms">
         <item>MD5</item>
         <item>SHA1</item>

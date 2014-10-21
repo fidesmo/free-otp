@@ -28,16 +28,20 @@ import android.text.TextWatcher;
 import android.widget.Button;
 import android.widget.EditText;
 
-
 public class AddTextWatcher implements TextWatcher {
-    private final Button   mButton;
+    public static interface ValidationCallback {
+        public void result(boolean isValid);
+    }
+
     private final EditText mIssuer;
     private final EditText mLabel;
     private final EditText mSecret;
     private final EditText mInterval;
+    private final ValidationCallback callback;
 
-    public AddTextWatcher(Activity activity) {
-        mButton = (Button) activity.findViewById(R.id.add);
+
+    public AddTextWatcher(Activity activity, ValidationCallback callback) {
+        this.callback = callback;
         mIssuer = (EditText) activity.findViewById(R.id.issuer);
         mLabel = (EditText) activity.findViewById(R.id.label);
         mSecret = (EditText) activity.findViewById(R.id.secret);
@@ -51,21 +55,10 @@ public class AddTextWatcher implements TextWatcher {
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
-        mButton.setEnabled(false);
-
-        if (mIssuer.getText().length() == 0)
-            return;
-
-        if (mLabel.getText().length() == 0)
-            return;
-
-        if (mSecret.getText().length() < 8)
-            return;
-
-        if (mInterval.getText().length() == 0)
-            return;
-
-        mButton.setEnabled(true);
+        callback.result(!(mIssuer.getText().length() == 0 ||
+                          mLabel.getText().length() == 0 ||
+                          mSecret.getText().length() < 8 ||
+                          mInterval.getText().length() == 0));
     }
 
     @Override

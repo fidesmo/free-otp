@@ -21,6 +21,7 @@
 package org.fedorahosted.freeotp.add;
 
 import java.util.List;
+import java.io.IOException;
 
 import org.fedorahosted.freeotp.R;
 import org.fedorahosted.freeotp.Token;
@@ -28,6 +29,7 @@ import org.fedorahosted.freeotp.TokenPersistenceFactory;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Intent;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
@@ -39,17 +41,22 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
+import android.nfc.tech.IsoDep;
 
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 public class ScanActivity extends Activity implements SurfaceHolder.Callback {
+    public static final String  EXTRA_IS_INTERNAL = "isInternal";
     private final CameraInfo    mCameraInfo  = new CameraInfo();
     private final ScanAsyncTask mScanAsyncTask;
     private final int           mCameraId;
     private Handler             mHandler;
     private Camera              mCamera;
+    private boolean             mInternal;
+    private String              mResult;
+    private IsoDep              mTag;
+    private static final int ADD_TOKEN_REQ_CODE = 3131513;
 
     private static class AutoFocusHandler extends Handler implements Camera.AutoFocusCallback {
         private final Camera mCamera;
@@ -98,42 +105,62 @@ public class ScanActivity extends Activity implements SurfaceHolder.Callback {
             @Override
             protected void onPostExecute(String result) {
                 super.onPostExecute(result);
-                Token token = TokenPersistenceFactory.createInternal(ScanActivity.this).addWithToast(ScanActivity.this, result);
-                if (token == null || token.getImage() == null) {
-                    finish();
-                    return;
-                }
+                mResult = result;
+                if(mInternal) {
+                    addToken();
+                } else {
+                    //turn off camera
+                    mScanAsyncTask.cancel(true);
 
-                final ImageView image = (ImageView) findViewById(R.id.image);
-                Picasso.with(ScanActivity.this)
-                        .load(token.getImage())
-                        .placeholder(R.drawable.scan)
-                        .into(image, new Callback() {
-                            @Override
-                            public void onSuccess() {
-                                findViewById(R.id.progress).setVisibility(View.INVISIBLE);
-                                image.setAlpha(0.9f);
-                                image.postDelayed(new Runnable() {
+                    //Send to dialog to continue filling information
+                    Intent addExternalTokenIntent = new Intent(ScanActivity.this, ExternalAddActivity.class);
+                    addExternalTokenIntent.putExtra(ExternalAddActivity.EXTRA_TAG, mResult);
+                    startActivityForResult(addExternalTokenIntent, ADD_TOKEN_REQ_CODE);
+                }
+            }
+        };
+    }
+
+    private void addToken() {
+        try {
+            Token token = TokenPersistenceFactory.create(this, mTag).addWithToast(this, mResult);
+            if (token == null || token.getImage() == null) {
+                finish();
+                return;
+            }
+
+            final ImageView image = (ImageView) findViewById(R.id.image);
+            Picasso.with(this)
+                .load(token.getImage())
+                .placeholder(R.drawable.scan)
+                .into(image, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            findViewById(R.id.progress).setVisibility(View.INVISIBLE);
+                            image.setAlpha(0.9f);
+                            image.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
                                         finish();
                                     }
                                 }, 2000);
-                            }
+                        }
 
-                            @Override
-                            public void onError() {
-                                finish();
-                            }
-                        });
-            }
-        };
+                        @Override
+                        public void onError() {
+                            finish();
+                        }
+                    });
+        } catch(IOException ioe) {
+
+        }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.scan);
+        mInternal = getIntent().getBooleanExtra(EXTRA_IS_INTERNAL, true);
         mScanAsyncTask.execute();
     }
 
@@ -147,6 +174,16 @@ public class ScanActivity extends Activity implements SurfaceHolder.Callback {
     protected void onStart() {
         super.onStart();
         ((SurfaceView) findViewById(R.id.surfaceview)).getHolder().addCallback(this);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case ADD_TOKEN_REQ_CODE:
+                finish();
+                break;
+        }
     }
 
     @Override

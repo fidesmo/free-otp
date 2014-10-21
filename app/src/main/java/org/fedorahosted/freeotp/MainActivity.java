@@ -36,67 +36,28 @@
 
 package org.fedorahosted.freeotp;
 
-import org.fedorahosted.freeotp.add.AddActivity;
+import java.io.IOException;
+
 import org.fedorahosted.freeotp.add.ScanActivity;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
-import android.view.View;
 import android.view.WindowManager.LayoutParams;
-import android.widget.GridView;
 
-public class MainActivity extends Activity implements OnMenuItemClickListener {
-    private TokenAdapter mTokenAdapter;
-    private TokenPersistence mTokenPersistence;
-    private DataSetObserver mDataSetObserver;
-
+public abstract class MainActivity extends Activity implements OnMenuItemClickListener {
+    protected abstract boolean isInternal();
+    protected abstract Class getAddActivity();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        onNewIntent(getIntent());
         setContentView(R.layout.main);
-        mTokenPersistence = TokenPersistenceFactory.createInternal(this);
-        mTokenAdapter = new TokenAdapter(this, mTokenPersistence);
-        ((GridView) findViewById(R.id.grid)).setAdapter(mTokenAdapter);
-
         // Don't permit screenshots since these might contain OTP codes.
         getWindow().setFlags(LayoutParams.FLAG_SECURE, LayoutParams.FLAG_SECURE);
-
-        mDataSetObserver = new DataSetObserver() {
-            @Override
-            public void onChanged() {
-                super.onChanged();
-                if (mTokenAdapter.getCount() == 0)
-                    findViewById(android.R.id.empty).setVisibility(View.VISIBLE);
-                else
-                    findViewById(android.R.id.empty).setVisibility(View.GONE);
-            }
-        };
-        mTokenAdapter.registerDataSetObserver(mDataSetObserver);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mTokenAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mTokenAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mTokenAdapter.unregisterDataSetObserver(mDataSetObserver);
     }
 
     @Override
@@ -111,14 +72,17 @@ public class MainActivity extends Activity implements OnMenuItemClickListener {
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
+        Intent i;
         switch (item.getItemId()) {
         case R.id.action_scan:
-            startActivity(new Intent(this, ScanActivity.class));
+            i = new Intent(this, ScanActivity.class);
+            i.putExtra(ScanActivity.EXTRA_IS_INTERNAL, isInternal());
+            startActivity(i);
             overridePendingTransition(R.anim.fadein, R.anim.fadeout);
             return true;
 
         case R.id.action_add:
-            startActivity(new Intent(this, AddActivity.class));
+            startActivity(new Intent(this, getAddActivity()));
             return true;
 
         case R.id.action_about:
@@ -129,12 +93,4 @@ public class MainActivity extends Activity implements OnMenuItemClickListener {
         return false;
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-
-        Uri uri = intent.getData();
-        if (uri != null)
-            mTokenPersistence.addWithToast(this, uri.toString());
-    }
 }

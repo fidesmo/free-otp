@@ -25,7 +25,6 @@ import java.net.URLEncoder;
 import java.util.Locale;
 
 import org.fedorahosted.freeotp.R;
-import org.fedorahosted.freeotp.TokenPersistenceFactory;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -41,7 +40,7 @@ import android.widget.Spinner;
 
 import com.squareup.picasso.Picasso;
 
-public class AddActivity extends Activity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public abstract class AddActivity extends Activity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private final int SHA1_OFFSET = 1;
     private ImageButton mImage;
     private EditText mIssuer;
@@ -51,14 +50,12 @@ public class AddActivity extends Activity implements View.OnClickListener, Compo
     private EditText mCounter;
     private Spinner mAlgorithm;
     private RadioButton mHOTP;
-
     private Uri mImageURL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add);
-
         mImage = (ImageButton) findViewById(R.id.image);
         mIssuer = (EditText) findViewById(R.id.issuer);
         mLabel = (EditText) findViewById(R.id.label);
@@ -76,17 +73,58 @@ public class AddActivity extends Activity implements View.OnClickListener, Compo
 
         // Setup the buttons
         findViewById(R.id.cancel).setOnClickListener(this);
-        findViewById(R.id.add).setOnClickListener(this);
-        findViewById(R.id.add).setEnabled(false);
         mImage.setOnClickListener(this);
 
+        AddTextWatcher.ValidationCallback validationcallback = new AddTextWatcher.ValidationCallback() {
+            @Override
+            public void result(boolean isValid) {
+                validationIsValid(isValid);
+            }
+        };
+
         // Set constraints on when the Add button is enabled
-        TextWatcher tw = new AddTextWatcher(this);
+        TextWatcher tw = new AddTextWatcher(this, validationcallback);
+        
         mIssuer.addTextChangedListener(tw);
         mLabel.addTextChangedListener(tw);
-        mSecret.addTextChangedListener(new AddSecretTextWatcher(this));
+        mSecret.addTextChangedListener(new AddSecretTextWatcher(this, validationcallback));
         mInterval.addTextChangedListener(tw);
     }
+
+    protected abstract void validationIsValid(boolean isValid);
+
+    protected void addToken() {
+        // Get the fields
+        String issuer = Uri.encode(mIssuer.getText().toString());
+        String label = Uri.encode(mLabel.getText().toString());
+        String secret = Uri.encode(mSecret.getText().toString());
+        String algorithm = mAlgorithm.getSelectedItem().toString().toLowerCase(Locale.US);
+        int interval = Integer.parseInt(mInterval.getText().toString());
+        int digits = ((RadioButton) findViewById(R.id.digits6)).isChecked() ? 6 : 8;
+
+        // Create the URI
+        String uri = String.format(Locale.US,
+                                   "otpauth://%sotp/%s:%s?secret=%s&algorithm=%s&digits=%d&period=%d",
+                                   mHOTP.isChecked() ? "h" : "t", issuer, label,
+                                   secret, algorithm, digits, interval);
+
+        // Add optional parameters.
+        if (mHOTP.isChecked()) {
+            int counter = Integer.parseInt(mCounter.getText().toString());
+            uri = uri.concat(String.format("&counter=%d", counter));
+        }
+        if (mImageURL != null) {
+            try {
+                String enc = URLEncoder.encode(mImageURL.toString(), "utf-8");
+                uri = uri.concat(String.format("&image=%s", enc));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        saveToken(uri);
+    }
+
+    abstract protected void saveToken(String uri);
 
     @Override
     public void onClick(View view) {
@@ -101,38 +139,7 @@ public class AddActivity extends Activity implements View.OnClickListener, Compo
                 break;
 
             case R.id.add:
-                // Get the fields
-                String issuer = Uri.encode(mIssuer.getText().toString());
-                String label = Uri.encode(mLabel.getText().toString());
-                String secret = Uri.encode(mSecret.getText().toString());
-                String algorithm = mAlgorithm.getSelectedItem().toString().toLowerCase(Locale.US);
-                int interval = Integer.parseInt(mInterval.getText().toString());
-                int digits = ((RadioButton) findViewById(R.id.digits6)).isChecked() ? 6 : 8;
-
-                // Create the URI
-                String uri = String.format(Locale.US,
-                        "otpauth://%sotp/%s:%s?secret=%s&algorithm=%s&digits=%d&period=%d",
-                        mHOTP.isChecked() ? "h" : "t", issuer, label,
-                        secret, algorithm, digits, interval);
-
-                // Add optional parameters.
-                if (mHOTP.isChecked()) {
-                    int counter = Integer.parseInt(mCounter.getText().toString());
-                    uri = uri.concat(String.format("&counter=%d", counter));
-                }
-                if (mImageURL != null) {
-                    try {
-                        String enc = URLEncoder.encode(mImageURL.toString(), "utf-8");
-                        uri = uri.concat(String.format("&image=%s", enc));
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                // Add the token
-                if (TokenPersistenceFactory.createInternal(this).addWithToast(this, uri) != null)
-                    finish();
-
+                addToken();
                 break;
         }
     }

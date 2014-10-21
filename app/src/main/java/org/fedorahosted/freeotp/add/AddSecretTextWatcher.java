@@ -24,8 +24,8 @@ import android.app.Activity;
 import android.text.Editable;
 
 public class AddSecretTextWatcher extends AddTextWatcher {
-    public AddSecretTextWatcher(Activity activity) {
-        super(activity);
+    public AddSecretTextWatcher(Activity activity, ValidationCallback callback) {
+        super(activity, callback);
     }
 
     @Override

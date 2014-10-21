@@ -19,6 +19,7 @@
  */
 package org.fedorahosted.freeotp;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,10 +52,10 @@ public class InternalTokenPersistence implements TokenPersistence {
 
     public Token addWithToast(Context ctx, String uri) {
         try {
-            Token token = new InternalToken(uri);
+            InternalToken token = new InternalToken(uri);
             add(token);
             return token;
-        } catch (TokenUriInvalidException e) {
+        } catch (Token.TokenUriInvalidException e) {
             Toast.makeText(ctx, R.string.invalid_token, Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
@@ -81,7 +82,7 @@ public class InternalTokenPersistence implements TokenPersistence {
             // Backwards compatibility for URL-based persistence.
             try {
                 return new InternalToken(str, true);
-            } catch (TokenUriInvalidException tuie) {
+            } catch (Token.TokenUriInvalidException tuie) {
                 tuie.printStackTrace();
             }
         }
@@ -89,7 +90,7 @@ public class InternalTokenPersistence implements TokenPersistence {
         return null;
     }
 
-    public void add(Token token) throws TokenUriInvalidException {
+    public void add(InternalToken token) throws Token.TokenUriInvalidException {
         String key = token.getID();
 
         if (prefs.contains(key))
@@ -114,7 +115,7 @@ public class InternalTokenPersistence implements TokenPersistence {
         setTokenOrder(order).apply();
     }
 
-    public void delete(int position) {
+    public void delete(int position) throws IOException {
         List<String> order = getTokenOrder();
         String key = order.remove(position);
         setTokenOrder(order).remove(key).apply();

@@ -20,6 +20,8 @@
 
 package org.fedorahosted.freeotp;
 
+import java.io.IOException;
+
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -34,6 +36,8 @@ import android.widget.Toast;
 
 import org.fedorahosted.freeotp.edit.DeleteActivity;
 import org.fedorahosted.freeotp.edit.EditActivity;
+import org.fedorahosted.freeotp.edit.ExternalDeleteActivity;
+import org.fedorahosted.freeotp.edit.InternalDeleteActivty;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,9 +91,9 @@ public class TokenAdapter extends BaseReorderableAdapter {
     protected void bindView(View view, final int position) {
         final Context ctx = view.getContext();
         TokenLayout tl = (TokenLayout) view;
-        Token token = getItem(position);
+        final Token token = getItem(position);
 
-        int menu = token.isEditable() ? R.menu.editable_token : R.menu.token;
+        int menu = token.isInternal() ? R.menu.editable_token : R.menu.token;
 
         tl.bind(token, menu, new PopupMenu.OnMenuItemClickListener() {
             @Override
@@ -104,9 +108,17 @@ public class TokenAdapter extends BaseReorderableAdapter {
                         break;
 
                     case R.id.action_delete:
-                        i = new Intent(ctx, DeleteActivity.class);
-                        i.putExtra(DeleteActivity.EXTRA_POSITION, position);
-                        ctx.startActivity(i);
+                        if(token.isInternal()) {
+                            i = new Intent(ctx, InternalDeleteActivty.class);
+                            i.putExtra(DeleteActivity.EXTRA_POSITION, position);
+                            i.putExtra(DeleteActivity.EXTRA_IS_INTERNAL, token.isInternal());
+                            ctx.startActivity(i);
+                        } else {
+                            i = new Intent(ctx, ExternalDeleteActivity.class);
+                            i.putExtra(DeleteActivity.EXTRA_POSITION, position);
+                            i.putExtra(DeleteActivity.EXTRA_IS_INTERNAL, token.isInternal());
+                            ctx.startActivity(i);
+                        }
                         break;
                 }
 
@@ -121,17 +133,23 @@ public class TokenAdapter extends BaseReorderableAdapter {
 
                 // Increment the token.
                 Token token = tp.get(position);
-                TokenCode codes = token.generateCodes();
-                tp.save(token);
+                try {
+                    TokenCode codes = token.generateCodes();
+                    tp.save(token);
 
-                // Copy code to clipboard.
-                mClipMan.setPrimaryClip(ClipData.newPlainText(null, codes.getCurrentCode()));
-                Toast.makeText(v.getContext().getApplicationContext(),
-                        R.string.code_copied,
-                        Toast.LENGTH_SHORT).show();
+                    // Copy code to clipboard.
+                    mClipMan.setPrimaryClip(ClipData.newPlainText(null, codes.getCurrentCode()));
+                    Toast.makeText(v.getContext().getApplicationContext(),
+                                   R.string.code_copied,
+                                   Toast.LENGTH_SHORT).show();
 
-                mTokenCodes.put(token.getID(), codes);
-                ((TokenLayout) v).start(token.getType(), codes, true);
+                    mTokenCodes.put(token.getID(), codes);
+                    ((TokenLayout) v).start(token.getType(), codes, true);
+                } catch(IOException e) {
+                    Toast.makeText(v.getContext().getApplicationContext(),
+                            R.string.external_token_needed,
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

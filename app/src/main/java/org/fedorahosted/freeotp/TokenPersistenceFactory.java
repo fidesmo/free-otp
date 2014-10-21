@@ -20,11 +20,26 @@
 
 package org.fedorahosted.freeotp;
 
+import java.io.IOException;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.nfc.tech.IsoDep;
 
 public class TokenPersistenceFactory {
 
     public static TokenPersistence createInternal(Context ctx) {
         return new InternalTokenPersistence(ctx);
+    }
+
+    public static TokenPersistence createExternal(Context ctx, IsoDep tag) throws IOException {
+        return new ExternalTokenPersistence(tag);
+    }
+
+    public static TokenPersistence create(Context ctx, IsoDep tag) throws IOException {
+        if(tag != null) {
+            return createExternal(ctx, tag);
+        } else {
+            return createInternal(ctx);
+        }
     }
 }
