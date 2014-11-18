@@ -75,7 +75,7 @@ public class EditActivity extends BaseActivity implements TextWatcher, View.OnCl
 
         // Get token values.
         mTokenPersistence = new InternalTokenPersistence(this);
-        InternalToken token = mTokenPersistence.get(getPosition());
+        InternalToken token = (InternalToken)mTokenPersistence.get(getPosition());
         mIssuerCurrent = token.getIssuer();
         mLabelCurrent = token.getLabel();
         mImageCurrent = token.getImage();
@@ -152,7 +152,7 @@ public class EditActivity extends BaseActivity implements TextWatcher, View.OnCl
                 break;
 
             case R.id.save:
-                InternalToken token = mTokenPersistence.get(getPosition());
+                InternalToken token = (InternalToken)mTokenPersistence.get(getPosition());
                 token.setIssuer(mIssuer.getText().toString());
                 token.setLabel(mLabel.getText().toString());
                 token.setImage(mImageDisplay);

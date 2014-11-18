@@ -19,22 +19,14 @@
  */
 package org.fedorahosted.freeotp;
 
-import java.lang.reflect.Type;
-import java.util.LinkedList;
-import java.util.List;
-
+import java.io.IOException;
 import android.content.Context;
-import android.content.SharedPreferences;
-
-import com.google.gson.reflect.TypeToken;
 
 public interface TokenPersistence {
-    public Token addWithToast(Context ctx, String uri);
     public int length();
     public Token get(int position);
-    public void add(InternalToken token) throws Token.TokenUriInvalidException;
+    public void add(InternalToken token) throws Token.TokenUriInvalidException, IOException;
     public void move(int fromPosition, int toPosition);
-    public void delete(int position);
-    public void save(Token token);
+    public TokenCode generateCodes(int position) throws IOException;
     public boolean isMovable();
 }

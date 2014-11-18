@@ -296,6 +296,22 @@ public class InternalToken implements Token {
         return null;
     }
 
+    public byte[] getSecret() {
+        return secret;
+    }
+
+    public long getCounter() {
+        return counter;
+    }
+
+    public int getPeriod() {
+        return period;
+    }
+
+    public String getAlgorithm() {
+        return algo;
+    }
+
     public boolean isInternal() {
         return true;
     }

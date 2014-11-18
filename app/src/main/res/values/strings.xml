@@ -37,7 +37,8 @@
 
     <string name="delete_summary">This is your last chance: if you delete this token, it will be gone forever. It will not be disabled on the server.</string>
     <string name="delete_question">Delete this token?</string>
-
+    <string name="external_token_needed">You need the NFC device to generate a code</string>
+    <string name="failed_to_read_external_token">Failed to read the NFC device</string>
     <string-array name="algorithms">
         <item>MD5</item>
         <item>SHA1</item>

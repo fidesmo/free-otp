@@ -37,6 +37,7 @@ import org.fedorahosted.freeotp.edit.EditActivity;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.io.IOException;
 
 public class TokenAdapter extends BaseReorderableAdapter {
     private final TokenPersistence mTokenPersistence;
@@ -121,17 +122,22 @@ public class TokenAdapter extends BaseReorderableAdapter {
 
                 // Increment the token.
                 Token token = tp.get(position);
-                TokenCode codes = token.generateCodes();
-                tp.save(token);
+                try {
+                    TokenCode codes = tp.generateCodes(position);
 
-                // Copy code to clipboard.
-                mClipMan.setPrimaryClip(ClipData.newPlainText(null, codes.getCurrentCode()));
-                Toast.makeText(v.getContext().getApplicationContext(),
-                        R.string.code_copied,
-                        Toast.LENGTH_SHORT).show();
+                    // Copy code to clipboard.
+                    mClipMan.setPrimaryClip(ClipData.newPlainText(null, codes.getCurrentCode()));
+                    Toast.makeText(v.getContext().getApplicationContext(),
+                                   R.string.code_copied,
+                                   Toast.LENGTH_SHORT).show();
 
-                mTokenCodes.put(token.getID(), codes);
-                ((TokenLayout) v).start(token.getType(), codes, true);
+                    mTokenCodes.put(token.getID(), codes);
+                    ((TokenLayout) v).start(token.getType(), codes, true);
+                } catch(IOException e) {
+                    Toast.makeText(v.getContext().getApplicationContext(),
+                            R.string.external_token_needed,
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

@@ -1,7 +1,7 @@
 package org.fedorahosted.freeotp.edit;
 
 import org.fedorahosted.freeotp.R;
-import org.fedorahosted.freeotp.InternalToken;
+import org.fedorahosted.freeotp.Token;
 import org.fedorahosted.freeotp.InternalTokenPersistence;
 
 import android.os.Bundle;
@@ -18,7 +18,7 @@ public class DeleteActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.delete);
         mTokenPersistence = new InternalTokenPersistence(this);
-        InternalToken token = mTokenPersistence.get(getPosition());
+        Token token = mTokenPersistence.get(getPosition());
         ((TextView) findViewById(R.id.issuer)).setText(token.getIssuer());
         ((TextView) findViewById(R.id.label)).setText(token.getLabel());
         Picasso.with(this)

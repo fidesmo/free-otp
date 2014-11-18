@@ -20,9 +20,11 @@
 
 package org.fedorahosted.freeotp;
 
+import java.io.IOException;
+import java.io.Serializable;
 import android.net.Uri;
 
-public interface Token {
+public interface Token extends Serializable {
     public static class TokenUriInvalidException extends Exception {
         private static final long serialVersionUID = -1108624734612362345L;
     }
@@ -43,14 +45,13 @@ public interface Token {
 
     public int getDigits();
 
-    // NOTE: This may change internal data. You MUST save the token immediately.
-    public TokenCode generateCodes();
-
     public TokenType getType();
 
     public Uri getImage();
 
     public void setImage(Uri image);
+
+    public String getAlgorithm();
 
     public boolean isInternal();
 }

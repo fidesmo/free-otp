@@ -54,7 +54,7 @@ public class InternalTokenPersistence implements TokenPersistence {
             InternalToken token = new InternalToken(uri);
             add(token);
             return token;
-        } catch (InternalToken.TokenUriInvalidException e) {
+        } catch (Token.TokenUriInvalidException e) {
             Toast.makeText(ctx, R.string.invalid_token, Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
@@ -71,7 +71,7 @@ public class InternalTokenPersistence implements TokenPersistence {
         return getTokenOrder().size();
     }
 
-    public InternalToken get(int position) {
+    private InternalToken getInternalToken(int position) {
         String key = getTokenOrder().get(position);
         String str = prefs.getString(key, null);
 
@@ -81,15 +81,18 @@ public class InternalTokenPersistence implements TokenPersistence {
             // Backwards compatibility for URL-based persistence.
             try {
                 return new InternalToken(str, true);
-            } catch (InternalToken.TokenUriInvalidException tuie) {
+            } catch (Token.TokenUriInvalidException tuie) {
                 tuie.printStackTrace();
             }
         }
-
         return null;
     }
 
-    public void add(InternalToken token) throws InternalToken.TokenUriInvalidException {
+    public Token get(int position) {
+        return getInternalToken(position);
+    }
+
+    public void add(InternalToken token) throws Token.TokenUriInvalidException {
         String key = token.getID();
 
         if (prefs.contains(key))
@@ -122,6 +125,13 @@ public class InternalTokenPersistence implements TokenPersistence {
 
     public void save(Token token) {
         prefs.edit().putString(token.getID(), gson.toJson(token)).apply();
+    }
+
+    public TokenCode generateCodes(int position) {
+        InternalToken token = getInternalToken(position);
+        TokenCode codes = token.generateCodes();
+        save(token);
+        return codes;
     }
 
     public boolean isMovable() {
