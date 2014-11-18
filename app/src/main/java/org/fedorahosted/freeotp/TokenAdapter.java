@@ -39,12 +39,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TokenAdapter extends BaseReorderableAdapter {
-    private final InternalTokenPersistence mTokenPersistence;
+    private final TokenPersistence mTokenPersistence;
     private final LayoutInflater mLayoutInflater;
     private final ClipboardManager mClipMan;
     private final Map<String, TokenCode> mTokenCodes;
 
-    public TokenAdapter(Context ctx, InternalTokenPersistence tokenPersistence) {
+    public TokenAdapter(Context ctx, TokenPersistence tokenPersistence) {
         mTokenPersistence = tokenPersistence;
         mLayoutInflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mClipMan = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -68,7 +68,7 @@ public class TokenAdapter extends BaseReorderableAdapter {
     }
 
     @Override
-    public InternalToken getItem(int position) {
+    public Token getItem(int position) {
         return mTokenPersistence.get(position);
     }
 
@@ -87,7 +87,7 @@ public class TokenAdapter extends BaseReorderableAdapter {
     protected void bindView(View view, final int position) {
         final Context ctx = view.getContext();
         TokenLayout tl = (TokenLayout) view;
-        InternalToken token = getItem(position);
+        Token token = getItem(position);
 
         int menu = token.isInternal() ? R.menu.editable_token : R.menu.token;
 
@@ -117,10 +117,10 @@ public class TokenAdapter extends BaseReorderableAdapter {
         tl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                InternalTokenPersistence tp = TokenAdapter.this.mTokenPersistence;
+                TokenPersistence tp = TokenAdapter.this.mTokenPersistence;
 
                 // Increment the token.
-                InternalToken token = tp.get(position);
+                Token token = tp.get(position);
                 TokenCode codes = token.generateCodes();
                 tp.save(token);
 

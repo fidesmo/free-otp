@@ -32,7 +32,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-public class InternalTokenPersistence {
+public class InternalTokenPersistence implements TokenPersistence {
     private static final String NAME  = "tokens";
     private static final String ORDER = "tokenOrder";
     private final SharedPreferences prefs;
@@ -120,7 +120,7 @@ public class InternalTokenPersistence {
         setTokenOrder(order).remove(key).apply();
     }
 
-    public void save(InternalToken token) {
+    public void save(Token token) {
         prefs.edit().putString(token.getID(), gson.toJson(token)).apply();
     }
 

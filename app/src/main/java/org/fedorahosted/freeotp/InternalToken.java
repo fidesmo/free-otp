@@ -33,15 +33,7 @@ import android.net.Uri;
 import com.google.android.apps.authenticator.Base32String;
 import com.google.android.apps.authenticator.Base32String.DecodingException;
 
-public class InternalToken {
-    public static class TokenUriInvalidException extends Exception {
-        private static final long serialVersionUID = -1108624734612362345L;
-    }
-
-    public static enum TokenType {
-        HOTP, TOTP
-    }
-
+public class InternalToken implements Token {
     private String issuerInt;
     private String issuerExt;
     private String issuerAlt;
