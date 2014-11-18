@@ -25,7 +25,6 @@ import java.net.URLEncoder;
 import java.util.Locale;
 
 import org.fedorahosted.freeotp.R;
-import org.fedorahosted.freeotp.InternalTokenPersistence;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -41,7 +40,7 @@ import android.widget.Spinner;
 
 import com.squareup.picasso.Picasso;
 
-public class AddActivity extends Activity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class AddActivity extends BaseActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private final int SHA1_OFFSET = 1;
     private ImageButton mImage;
     private EditText mIssuer;
@@ -129,9 +128,10 @@ public class AddActivity extends Activity implements View.OnClickListener, Compo
                     }
                 }
 
-                // Add the token
-                if (new InternalTokenPersistence(this).addWithToast(this, uri) != null)
-                    finish();
+                Intent resultData = new Intent();
+                resultData.putExtra(EXTRA_TOKEN_URI, uri);
+                setResult(RESULT_OK, resultData);
+                finish();
 
                 break;
         }

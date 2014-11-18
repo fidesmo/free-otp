@@ -20,6 +20,9 @@
 
 package org.fedorahosted.freeotp;
 
+import java.io.IOException;
+
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -44,8 +47,10 @@ public class TokenAdapter extends BaseReorderableAdapter {
     private final LayoutInflater mLayoutInflater;
     private final ClipboardManager mClipMan;
     private final Map<String, TokenCode> mTokenCodes;
+    private final Activity mCtx;
 
-    public TokenAdapter(Context ctx, TokenPersistence tokenPersistence) {
+    public TokenAdapter(Activity ctx, TokenPersistence tokenPersistence) {
+        mCtx = ctx;
         mTokenPersistence = tokenPersistence;
         mLayoutInflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mClipMan = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -86,9 +91,8 @@ public class TokenAdapter extends BaseReorderableAdapter {
 
     @Override
     protected void bindView(View view, final int position) {
-        final Context ctx = view.getContext();
         TokenLayout tl = (TokenLayout) view;
-        Token token = getItem(position);
+        final Token token = getItem(position);
 
         int menu = token.isInternal() ? R.menu.editable_token : R.menu.token;
 
@@ -99,15 +103,16 @@ public class TokenAdapter extends BaseReorderableAdapter {
 
                 switch (item.getItemId()) {
                     case R.id.action_edit:
-                        i = new Intent(ctx, EditActivity.class);
-                        i.putExtra(EditActivity.EXTRA_POSITION, position);
-                        ctx.startActivity(i);
+                        i = new Intent(mCtx, EditActivity.class);
+                        i.putExtra(EditActivity.EXTRA_TOKEN, token);
+                        mCtx.startActivityForResult(i, MainActivity.EDIT_REQUEST_CODE);
                         break;
 
                     case R.id.action_delete:
-                        i = new Intent(ctx, DeleteActivity.class);
+                        i = new Intent(mCtx, DeleteActivity.class);
                         i.putExtra(DeleteActivity.EXTRA_POSITION, position);
-                        ctx.startActivity(i);
+                        i.putExtra(DeleteActivity.EXTRA_TOKEN, token);
+                        mCtx.startActivityForResult(i, MainActivity.DELETE_REQUEST_CODE);
                         break;
                 }
 

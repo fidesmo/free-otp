@@ -22,8 +22,8 @@ package org.fedorahosted.freeotp.edit;
 
 import org.fedorahosted.freeotp.R;
 import org.fedorahosted.freeotp.InternalToken;
-import org.fedorahosted.freeotp.InternalTokenPersistence;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -36,7 +36,10 @@ import android.widget.ImageButton;
 
 import com.squareup.picasso.Picasso;
 
-public class EditActivity extends BaseActivity implements TextWatcher, View.OnClickListener {
+public class EditActivity extends Activity implements TextWatcher, View.OnClickListener {
+    public static final String EXTRA_TOKEN = "token";
+
+    private InternalToken      mToken;
     private EditText           mIssuer;
     private EditText           mLabel;
     private ImageButton        mImage;
@@ -50,7 +53,6 @@ public class EditActivity extends BaseActivity implements TextWatcher, View.OnCl
     private Uri mImageCurrent;
     private Uri mImageDefault;
     private Uri mImageDisplay;
-    private InternalTokenPersistence mTokenPersistence;
 
     private void showImage(Uri uri) {
         mImageDisplay = uri;
@@ -72,19 +74,18 @@ public class EditActivity extends BaseActivity implements TextWatcher, View.OnCl
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.edit);
-
+        mToken = (InternalToken)getIntent().getSerializableExtra(EXTRA_TOKEN);
         // Get token values.
-        mTokenPersistence = new InternalTokenPersistence(this);
-        InternalToken token = (InternalToken)mTokenPersistence.get(getPosition());
-        mIssuerCurrent = token.getIssuer();
-        mLabelCurrent = token.getLabel();
-        mImageCurrent = token.getImage();
-        token.setIssuer(null);
-        token.setLabel(null);
-        token.setImage(null);
-        mIssuerDefault = token.getIssuer();
-        mLabelDefault = token.getLabel();
-        mImageDefault = token.getImage();
+
+        mIssuerCurrent = mToken.getIssuer();
+        mLabelCurrent = mToken.getLabel();
+        mImageCurrent = mToken.getImage();
+        mToken.setIssuer(null);
+        mToken.setLabel(null);
+        mToken.setImage(null);
+        mIssuerDefault = mToken.getIssuer();
+        mLabelDefault = mToken.getLabel();
+        mImageDefault = mToken.getImage();
 
         // Get references to widgets.
         mIssuer = (EditText) findViewById(R.id.issuer);
@@ -152,13 +153,17 @@ public class EditActivity extends BaseActivity implements TextWatcher, View.OnCl
                 break;
 
             case R.id.save:
-                InternalToken token = (InternalToken)mTokenPersistence.get(getPosition());
-                token.setIssuer(mIssuer.getText().toString());
-                token.setLabel(mLabel.getText().toString());
-                token.setImage(mImageDisplay);
-                mTokenPersistence.save(token);
+                mToken.setIssuer(mIssuer.getText().toString());
+                mToken.setLabel(mLabel.getText().toString());
+                mToken.setImage(mImageDisplay);
+                Intent resultData = new Intent();
+                resultData.putExtra(EXTRA_TOKEN, mToken);
+                setResult(RESULT_OK, resultData);
+                finish();
+                break;
 
             case R.id.cancel:
+                setResult(RESULT_CANCELED);
                 finish();
                 break;
         }

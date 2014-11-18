@@ -23,14 +23,14 @@ package org.fedorahosted.freeotp.add;
 import java.util.List;
 
 import org.fedorahosted.freeotp.R;
-import org.fedorahosted.freeotp.InternalToken;
-import org.fedorahosted.freeotp.InternalTokenPersistence;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.Intent;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -44,7 +44,7 @@ import android.widget.ProgressBar;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
-public class ScanActivity extends Activity implements SurfaceHolder.Callback {
+public class ScanActivity extends BaseActivity implements SurfaceHolder.Callback {
     private final CameraInfo    mCameraInfo  = new CameraInfo();
     private final ScanAsyncTask mScanAsyncTask;
     private final int           mCameraId;
@@ -98,15 +98,22 @@ public class ScanActivity extends Activity implements SurfaceHolder.Callback {
             @Override
             protected void onPostExecute(String result) {
                 super.onPostExecute(result);
-                InternalToken token = new InternalTokenPersistence(ScanActivity.this).addWithToast(ScanActivity.this, result);
-                if (token == null || token.getImage() == null) {
+
+                Uri uri = Uri.parse(result);
+
+                final Intent resultData = new Intent();
+                resultData.putExtra(EXTRA_TOKEN_URI, result);
+
+                String imageParameter = uri.getQueryParameter("image");
+                if(imageParameter == null) {
+                    setResult(RESULT_OK, resultData);
                     finish();
                     return;
                 }
-
+                Uri imageUri = Uri.parse(imageParameter);
                 final ImageView image = (ImageView) findViewById(R.id.image);
                 Picasso.with(ScanActivity.this)
-                        .load(token.getImage())
+                        .load(imageUri)
                         .placeholder(R.drawable.scan)
                         .into(image, new Callback() {
                             @Override
@@ -116,6 +123,7 @@ public class ScanActivity extends Activity implements SurfaceHolder.Callback {
                                 image.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
+                                        setResult(RESULT_OK, resultData);
                                         finish();
                                     }
                                 }, 2000);
@@ -123,6 +131,7 @@ public class ScanActivity extends Activity implements SurfaceHolder.Callback {
 
                             @Override
                             public void onError() {
+                                setResult(RESULT_CANCELED);
                                 finish();
                             }
                         });
