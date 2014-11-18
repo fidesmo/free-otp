@@ -53,6 +53,7 @@ import android.widget.GridView;
 
 public class MainActivity extends Activity implements OnMenuItemClickListener {
     private TokenAdapter mTokenAdapter;
+    private InternalTokenPersistence mTokenPersistence;
     private DataSetObserver mDataSetObserver;
 
     @Override
@@ -60,8 +61,8 @@ public class MainActivity extends Activity implements OnMenuItemClickListener {
         super.onCreate(savedInstanceState);
         onNewIntent(getIntent());
         setContentView(R.layout.main);
-
-        mTokenAdapter = new TokenAdapter(this);
+        mTokenPersistence = new InternalTokenPersistence(this);
+        mTokenAdapter = new TokenAdapter(this, mTokenPersistence);
         ((GridView) findViewById(R.id.grid)).setAdapter(mTokenAdapter);
 
         // Don't permit screenshots since these might contain OTP codes.
@@ -134,6 +135,6 @@ public class MainActivity extends Activity implements OnMenuItemClickListener {
 
         Uri uri = intent.getData();
         if (uri != null)
-            TokenPersistence.addWithToast(this, uri.toString());
+            mTokenPersistence.addWithToast(this, uri.toString());
     }
 }

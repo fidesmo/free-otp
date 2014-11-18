@@ -33,7 +33,7 @@ import android.net.Uri;
 import com.google.android.apps.authenticator.Base32String;
 import com.google.android.apps.authenticator.Base32String.DecodingException;
 
-public class Token {
+public class InternalToken {
     public static class TokenUriInvalidException extends Exception {
         private static final long serialVersionUID = -1108624734612362345L;
     }
@@ -56,7 +56,7 @@ public class Token {
     private long counter;
     private int period;
 
-    private Token(Uri uri, boolean internal) throws TokenUriInvalidException {
+    private InternalToken(Uri uri, boolean internal) throws TokenUriInvalidException {
         if (!uri.getScheme().equals("otpauth"))
             throw new TokenUriInvalidException();
 
@@ -182,15 +182,15 @@ public class Token {
         return "";
     }
 
-    public Token(String uri, boolean internal) throws TokenUriInvalidException {
+    public InternalToken(String uri, boolean internal) throws TokenUriInvalidException {
         this(Uri.parse(uri), internal);
     }
 
-    public Token(Uri uri) throws TokenUriInvalidException {
+    public InternalToken(Uri uri) throws TokenUriInvalidException {
         this(uri, false);
     }
 
-    public Token(String uri) throws TokenUriInvalidException {
+    public InternalToken(String uri) throws TokenUriInvalidException {
         this(Uri.parse(uri));
     }
 
@@ -302,5 +302,9 @@ public class Token {
             return Uri.parse(image);
 
         return null;
+    }
+
+    public boolean isInternal() {
+        return true;
     }
 }

@@ -1,10 +1,27 @@
+/*
+ * FreeOTP
+ *
+ * Authors: Nathaniel McCallum <npmccallum@redhat.com>
+ *
+ * Copyright (C) 2013  Nathaniel McCallum, Red Hat
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.fedorahosted.freeotp;
 
 import java.lang.reflect.Type;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.fedorahosted.freeotp.Token.TokenUriInvalidException;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -15,7 +32,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-public class TokenPersistence {
+public class InternalTokenPersistence {
     private static final String NAME  = "tokens";
     private static final String ORDER = "tokenOrder";
     private final SharedPreferences prefs;
@@ -32,12 +49,12 @@ public class TokenPersistence {
         return prefs.edit().putString(ORDER, gson.toJson(order));
     }
 
-    public static Token addWithToast(Context ctx, String uri) {
+    public InternalToken addWithToast(Context ctx, String uri) {
         try {
-            Token token = new Token(uri);
-            new TokenPersistence(ctx).add(token);
+            InternalToken token = new InternalToken(uri);
+            add(token);
             return token;
-        } catch (TokenUriInvalidException e) {
+        } catch (InternalToken.TokenUriInvalidException e) {
             Toast.makeText(ctx, R.string.invalid_token, Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
@@ -45,7 +62,7 @@ public class TokenPersistence {
         return null;
     }
 
-    public TokenPersistence(Context ctx) {
+    public InternalTokenPersistence(Context ctx) {
         prefs = ctx.getApplicationContext().getSharedPreferences(NAME, Context.MODE_PRIVATE);
         gson = new Gson();
     }
@@ -54,17 +71,17 @@ public class TokenPersistence {
         return getTokenOrder().size();
     }
 
-    public Token get(int position) {
+    public InternalToken get(int position) {
         String key = getTokenOrder().get(position);
         String str = prefs.getString(key, null);
 
         try {
-            return gson.fromJson(str, Token.class);
+            return gson.fromJson(str, InternalToken.class);
         } catch (JsonSyntaxException jse) {
             // Backwards compatibility for URL-based persistence.
             try {
-                return new Token(str, true);
-            } catch (TokenUriInvalidException tuie) {
+                return new InternalToken(str, true);
+            } catch (InternalToken.TokenUriInvalidException tuie) {
                 tuie.printStackTrace();
             }
         }
@@ -72,7 +89,7 @@ public class TokenPersistence {
         return null;
     }
 
-    public void add(Token token) throws TokenUriInvalidException {
+    public void add(InternalToken token) throws InternalToken.TokenUriInvalidException {
         String key = token.getID();
 
         if (prefs.contains(key))
@@ -103,7 +120,11 @@ public class TokenPersistence {
         setTokenOrder(order).remove(key).apply();
     }
 
-    public void save(Token token) {
+    public void save(InternalToken token) {
         prefs.edit().putString(token.getID(), gson.toJson(token)).apply();
+    }
+
+    public boolean isMovable() {
+        return true;
     }
 }
